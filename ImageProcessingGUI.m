@@ -4,6 +4,7 @@ classdef ImageProcessingGUI < matlab.apps.AppBase
     properties (Access = public)
         UIFigure                   matlab.ui.Figure
         IMAGEPROCESSINGPanel       matlab.ui.container.Panel
+        DownloadButton             matlab.ui.control.Button
         EdgeDetectionButtonGroup   matlab.ui.container.ButtonGroup
         SobelButton                matlab.ui.control.Button
         CannyButton                matlab.ui.control.Button
@@ -103,6 +104,29 @@ classdef ImageProcessingGUI < matlab.apps.AppBase
         function ResetButtonPushed(app, event)
             global image;
             imshow(image, 'Parent', app.UIAxes_2);
+        end
+
+        % Button pushed function: DownloadButton
+        function DownloadButtonPushed(app, event)
+            outputImage = getimage(app.UIAxes_2);
+            
+            if isempty(outputImage)
+                errordlg('No image to download.', 'Error');
+                return;
+            end
+            
+            [filename, path] = uiputfile('*.png', 'Save Image As');
+            
+            % Check if the user canceled the save operation
+            if isequal(filename,0) || isequal(path,0)
+                return;
+            end
+            
+            % Save the image
+            imwrite(outputImage, fullfile(path, filename));
+            
+            % Show a message box to confirm the successful save
+            msgbox('Image saved successfully.', 'Success');
         end
 
         % Button pushed function: ExitButton
@@ -232,16 +256,6 @@ classdef ImageProcessingGUI < matlab.apps.AppBase
             imshow(rz, 'Parent', app.UIAxes_2);
         end
 
-        % Callback function
-        function PeriodicButtonPushed(app, event)
-            global image;
-            s = size(image);
-            [x,y] = meshgrid(1:s(1),1:s(2));
-            p = sin(x/3+y/5)+1;
-            noise =(im2double(image)+p/2)/2;
-            imshow(noise, 'Parent', app.UIAxes_2);
-        end
-
         % Button pushed function: Histogram_GrayscaleButton
         function Histogram_GrayscaleButtonPushed(app, event)
             global image;
@@ -279,11 +293,6 @@ classdef ImageProcessingGUI < matlab.apps.AppBase
             
             % Display the output image in the UIAxes_2
             imshow(outputImage, 'Parent', app.UIAxes_2);
-        end
-
-        % Button down function: UIAxes
-        function UIAxesButtonDown(app, event)
-            
         end
 
         % Value changed function: Knob
@@ -387,7 +396,6 @@ classdef ImageProcessingGUI < matlab.apps.AppBase
             app.UIAxes.Color = [0.8902 0.8 0.9608];
             app.UIAxes.Box = 'on';
             app.UIAxes.FontSize = 15;
-            app.UIAxes.ButtonDownFcn = createCallbackFcn(app, @UIAxesButtonDown, true);
             colormap(app.UIAxes, 'hsv')
             app.UIAxes.Position = [35 225 409 222];
 
@@ -411,7 +419,7 @@ classdef ImageProcessingGUI < matlab.apps.AppBase
             app.ImportButton.BackgroundColor = [1 1 1];
             app.ImportButton.FontName = 'Bitstream Charter';
             app.ImportButton.FontSize = 18;
-            app.ImportButton.Position = [919 386 152 47];
+            app.ImportButton.Position = [918 409 152 47];
             app.ImportButton.Text = 'Import ';
 
             % Create ResetButton
@@ -421,7 +429,7 @@ classdef ImageProcessingGUI < matlab.apps.AppBase
             app.ResetButton.BackgroundColor = [1 1 1];
             app.ResetButton.FontName = 'Bitstream Charter';
             app.ResetButton.FontSize = 18;
-            app.ResetButton.Position = [919 312 152 47];
+            app.ResetButton.Position = [918 348 152 47];
             app.ResetButton.Text = 'Reset ';
 
             % Create ExitButton
@@ -431,8 +439,18 @@ classdef ImageProcessingGUI < matlab.apps.AppBase
             app.ExitButton.BackgroundColor = [1 1 1];
             app.ExitButton.FontName = 'Bitstream Charter';
             app.ExitButton.FontSize = 18;
-            app.ExitButton.Position = [919 231 152 48];
+            app.ExitButton.Position = [919 226 152 48];
             app.ExitButton.Text = 'Exit ';
+
+            % Create DownloadButton
+            app.DownloadButton = uibutton(app.IMAGEPROCESSINGPanel, 'push');
+            app.DownloadButton.ButtonPushedFcn = createCallbackFcn(app, @DownloadButtonPushed, true);
+            app.DownloadButton.Icon = fullfile(pathToMLAPP, 'Icons', 'Download.png');
+            app.DownloadButton.BackgroundColor = [1 1 1];
+            app.DownloadButton.FontName = 'Bitstream Charter';
+            app.DownloadButton.FontSize = 18;
+            app.DownloadButton.Position = [918 291 152 47];
+            app.DownloadButton.Text = 'Download';
 
             % Create Panel
             app.Panel = uipanel(app.IMAGEPROCESSINGPanel);
@@ -523,7 +541,7 @@ classdef ImageProcessingGUI < matlab.apps.AppBase
 
             % Create ColorButton
             app.ColorButton = uibutton(app.Panel, 'push');
-            app.ColorButton.Icon = fullfile(pathToMLAPP, 'image_processing', 'Color.jpeg');
+            app.ColorButton.Icon = fullfile(pathToMLAPP, 'Icons', 'Color.jpeg');
             app.ColorButton.FontSize = 15;
             app.ColorButton.FontWeight = 'bold';
             app.ColorButton.Position = [16 68 119 38];
