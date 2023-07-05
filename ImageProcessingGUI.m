@@ -251,13 +251,34 @@ classdef ImageProcessingGUI < matlab.apps.AppBase
 
         % Button pushed function: RemoveBackgroundButton
         function RemoveBackgroundButtonPushed(app, event)
-            %global image;
+            global image;
             global input;
+            input = rgb2gray(image);
             xgray = input;
             [r,c] = size(xgray);
             alpha = ones(r,c);
-            alpha(xgray>=220)=0;
-            imshow(alpha, 'Parent', app.UIAxes_2);
+            alpha(xgray>=220) = 0;
+            
+            % Get the background color of the GUI
+            bgColor = get(app.UIFigure, 'Color');
+            
+            % Create a new image with the same size as the GUI background
+            [bgHeight, bgWidth, ~] = size(image);
+            background = uint8(zeros(bgHeight, bgWidth, 3));
+            
+            % Set the background color
+            background(:, :, 1) = uint8(bgColor(1) * 255);
+            background(:, :, 2) = uint8(bgColor(2) * 255);
+            background(:, :, 3) = uint8(bgColor(3) * 255);
+        
+            % Overlay the foreground object on the background
+            outputImage = uint8(double(image) .* alpha + double(background) .* (1 - alpha));
+            
+            % Save the image with transparency
+            imwrite(outputImage, 'apple2.png', 'Alpha', alpha);
+            
+            % Display the output image in the UIAxes_2
+            imshow(outputImage, 'Parent', app.UIAxes_2);
         end
 
         % Button down function: UIAxes
